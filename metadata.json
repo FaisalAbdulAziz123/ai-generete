@@ -1,0 +1,7 @@
+{
+  "name": "Copy of PLOW AI GENERATOR",
+  "description": "Professional Text-to-Video Creator. Generate realistic videos from text and reference images using the power of Veo.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
