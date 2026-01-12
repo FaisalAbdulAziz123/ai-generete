@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Mail, Lock, Loader2, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Mail, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import { Logo } from './Logo';
 import { loginUser } from '../services/authService';
 import { UserProfile } from '../types';
@@ -11,7 +11,6 @@ interface LoginPageProps {
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,19 +19,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setError(null);
 
     // Basic Validation
-    if (!email || !password) {
-      setError("Mohon isi email dan password.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Password minimal 6 karakter.");
+    if (!email) {
+      setError("Mohon isi email Anda.");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await loginUser(email, password);
+      const response = await loginUser(email);
       
       if (response.success && response.user) {
         // Save session
@@ -93,28 +88,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-zinc-950 border border-zinc-800 text-white text-sm rounded-xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-600/50 focus:border-blue-600 transition-all placeholder:text-zinc-600"
-                  placeholder="name@example.com"
+                  placeholder="Masukkan email Anda"
                   autoComplete="email"
-                />
-              </div>
-            </div>
-
-            {/* Password Input */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center ml-1">
-                <label className="text-xs font-medium text-zinc-400">Password</label>
-                <a href="#" className="text-xs text-blue-400 hover:text-blue-300 transition-colors">Forgot password?</a>
-              </div>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-white transition-colors">
-                  <Lock size={18} />
-                </div>
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 text-white text-sm rounded-xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-600/50 focus:border-blue-600 transition-all placeholder:text-zinc-600"
-                  placeholder="••••••••"
                 />
               </div>
             </div>
@@ -132,11 +107,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               {isLoading ? (
                 <>
                   <Loader2 size={18} className="animate-spin" />
-                  Verifying...
+                  Checking...
                 </>
               ) : (
                 <>
-                  Log In <ArrowRight size={18} />
+                  Access <ArrowRight size={18} />
                 </>
               )}
             </button>
@@ -155,7 +130,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                <span>Secure Login</span> • <span>Encrypted</span> • <span>24/7 Access</span>
             </div>
             <p className="text-[10px] text-zinc-700">
-               Use email: <strong>user@plow.ai</strong> pass: <strong>password123</strong> to test.
+               Test with email: <strong>user@plow.ai</strong>
             </p>
         </div>
       </div>

@@ -9,6 +9,7 @@ import CloningExtractor from './components/CloningExtractor';
 import AnimationStoryBuilder from './components/AnimationStoryBuilder';
 import StoryTelling from './components/StoryTelling';
 import SettingsPage from './components/SettingsPage';
+import LoginPage from './components/LoginPage';
 import { Menu, X, Key, Save, Zap, Check, Lock, ShieldAlert } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { getStoredApiKey, setStoredApiKey, getStoredGroqKey, setStoredGroqKey, setActiveProvider, getActiveProvider } from './services/geminiService';
@@ -141,12 +142,15 @@ const App: React.FC = () => {
   // API Key State (Gatekeeper)
   const [hasApiKey, setHasApiKey] = useState<boolean>(!!getStoredApiKey());
   
-  // Default User Profile (No login required)
+  // Authentication State - CHECK LOGIN FIRST
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  
+  // Default User Profile
   const [userProfile, setUserProfile] = useState<UserProfile>({
     username: 'Creator',
     email: 'user@plow.ai',
     theme: 'dark',
-    language: 'en', // Default Language
+    language: 'en',
     interests: [],
     isAdult: false
   });
@@ -155,14 +159,13 @@ const App: React.FC = () => {
 
   // Check for existing saved preferences on mount
   useEffect(() => {
-    // Check API Key existence on mount to enforce lock
-    setHasApiKey(!!getStoredApiKey());
-
+    // Check Login Status FIRST
     const savedUser = localStorage.getItem("plow_user_data");
-    if (savedUser) {
+    const authToken = localStorage.getItem("plow_auth_token");
+    
+    if (savedUser && authToken) {
       try {
         const parsed = JSON.parse(savedUser);
-        // Ensure robust defaults for potentially missing fields
         setUserProfile({
           username: parsed.username || 'Creator',
           email: parsed.email || 'user@plow.ai',
@@ -172,11 +175,17 @@ const App: React.FC = () => {
           isAdult: !!parsed.isAdult,
           avatarUrl: parsed.avatarUrl
         });
+        setIsLoggedIn(true);
       } catch (error) {
         console.error("Failed to parse user profile", error);
         localStorage.removeItem("plow_user_data");
+        localStorage.removeItem("plow_auth_token");
+        setIsLoggedIn(false);
       }
     }
+    
+    // Check API Key existence on mount
+    setHasApiKey(!!getStoredApiKey());
   }, []);
 
   // Handle Theme Toggle Effect
@@ -204,11 +213,10 @@ const App: React.FC = () => {
     localStorage.setItem("plow_user_data", JSON.stringify(newUser));
   };
 
-  // Handle Reset (Previously Logout)
+  // Handle Reset (Logout)
   const handleReset = () => {
     localStorage.removeItem("plow_user_data");
     localStorage.removeItem("plow_auth_token");
-    // Also clear API keys on logout/reset? Optional, but safer to keep them for convenience unless explicitly deleted in settings.
     
     // Reset to defaults
     setUserProfile({
@@ -220,6 +228,8 @@ const App: React.FC = () => {
       isAdult: false
     });
     
+    setIsLoggedIn(false);
+    
     // Reset theme
     const root = window.document.documentElement;
     root.classList.add('dark');
@@ -227,6 +237,12 @@ const App: React.FC = () => {
     
     setView(AppView.DASHBOARD);
     setIsMobileMenuOpen(false);
+  };
+
+  // Handle Login Success
+  const handleLoginSuccess = (user: UserProfile) => {
+    setUserProfile(user);
+    setIsLoggedIn(true);
   };
 
   // Wrapper to close mobile menu on selection
@@ -246,10 +262,11 @@ const App: React.FC = () => {
 
   return (
     <LanguageProvider initialLanguage={userProfile.language}>
-      {/* API KEY ENFORCER: If no API key, block everything else */}
-      {!hasApiKey ? (
-         <ApiKeyEnforcer onComplete={handleApiKeySet} />
+      {/* STEP 1: LOGIN PAGE - If not logged in, show login */}
+      {!isLoggedIn ? (
+        <LoginPage onLoginSuccess={handleLoginSuccess} />
       ) : (
+        // STEP 2: MAIN APP - After login, show main app directly
         <div className={`flex h-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 font-sans overflow-hidden transition-colors duration-300 relative`}>
           
           {/* Mobile Menu Toggle Button */}
